@@ -3,26 +3,21 @@ import {
   featureKeys,
   type FeatureConfig,
 } from './defaultFeatureConfig';
-import { isDev } from './env';
-import { getFeatureConfigFromSessionStorage } from './featureStorage';
+import { overridesEnabled } from './env';
+import { loadFeatureConfig } from './featureStorage';
 
-/**
- * The production config: the defaults, with every dev-only `mock*` flag
- * forced off, so a default left on by mistake never ships mocks to users.
- */
-export function productionFeatureConfig(
-  defaults: FeatureConfig = defaultFeatureConfig,
-): FeatureConfig {
+// Every `mock*` flag is forced off, so a default left on by mistake never
+// ships mocks to users.
+function defaultsWithMocksOff(): FeatureConfig {
   return Object.fromEntries(
-    featureKeys.map(key => [key, key.startsWith('mock') ? false : defaults[key]]),
+    featureKeys.map(key => [
+      key,
+      key.startsWith('mock') ? false : defaultFeatureConfig[key],
+    ]),
   ) as FeatureConfig;
 }
 
-/**
- * In local dev, flags are read from sessionStorage; in production, the
- * production config is used. Read once at module load: a change takes effect
- * after a reload.
- */
-export const featureConfig: FeatureConfig = isDev
-  ? getFeatureConfigFromSessionStorage()
-  : productionFeatureConfig();
+// Read once at module load: a change takes effect after a reload.
+export const featureConfig: FeatureConfig = overridesEnabled
+  ? loadFeatureConfig()
+  : defaultsWithMocksOff();

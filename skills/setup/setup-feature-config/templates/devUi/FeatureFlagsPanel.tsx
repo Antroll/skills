@@ -2,23 +2,14 @@ import { useState, useSyncExternalStore, type CSSProperties } from 'react';
 // Adapt this path to where the featureConfig module lives.
 import {
   featureConfig,
+  featureDescriptions,
   setFeatureState,
   type FeatureConfig,
   type FeatureConfigKey,
 } from './featureConfig';
 
-/** One line per flag that needs more than its name; others get a label from the key. */
-const flagDescriptions: Partial<Record<FeatureConfigKey, string>> = {
-  isDevUiEnabled: 'Shows this panel. Works only in local development.',
-  mockApi:
-    'Every request wrapped in mockable answers with its mock, so the app runs without the API.',
-  mockSlow: 'With Mock API mode: every mock takes 3 seconds to answer.',
-  mockFailing: 'With Mock API mode: every mock fails.',
-};
-
 const noSubscription = () => () => {};
 
-/** `someFlag` → "Some Flag". */
 function camelCaseToTitle(value: string): string {
   return value.replace(/([A-Z])/g, ' $1').replace(/^./, s => s.toUpperCase());
 }
@@ -79,8 +70,7 @@ export function FeatureFlagsPanel() {
       {open && (
         <div style={styles.card}>
           <p style={styles.note}>
-            Local development only. Changes apply after a reload; a new tab
-            resets to the defaults.
+            Changes apply after a reload; a new tab resets to the defaults.
           </p>
           {keys.map(key => (
             <label key={key} style={styles.item}>
@@ -96,11 +86,9 @@ export function FeatureFlagsPanel() {
               <span>
                 <strong>{camelCaseToTitle(key)}</strong>
                 {isChanged(key) && ' 🔃'}
-                {flagDescriptions[key] && (
-                  <span style={styles.description}>
-                    {flagDescriptions[key]}
-                  </span>
-                )}
+                <span style={styles.description}>
+                  {featureDescriptions[key]}
+                </span>
               </span>
             </label>
           ))}

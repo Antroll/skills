@@ -1,15 +1,22 @@
 # Feature config
 
-Boolean feature flags with defaults in code, overridable per tab in local development, plus **Mock API mode**: every request answers with a mock, so the app runs offline, without the API.
+Boolean feature flags with defaults in code, overridable per tab where overrides are enabled (local development by default), plus **Mock API mode**: every request answers with a mock, so the app runs offline, without the API.
 
 ## Flags
 
-- Defaults live in `defaultFeatureConfig.ts`. To add a flag, add a key there with a one-line comment; the dev panel and the storage overrides pick it up.
-- In local development, each flag is stored in `sessionStorage` as `feature:<key>` (`"true"` / `"false"`). Change it in the flags panel or in DevTools, then reload: flags are read once at page load. A new tab starts from the defaults.
-- In production, `sessionStorage` is never read: the app uses the defaults, and every flag named `mock*` is forced off. Name a flag `mock*` only if it must never reach users.
-- `env.ts` holds the one line that tells development from production.
+- Defaults live in `defaultFeatureConfig.ts`. To add a flag, add a key to `defaultFeatureConfig` and its line to `featureDescriptions`; the flags panel and the storage overrides pick it up.
+- Where overrides are enabled, each flag is stored in `sessionStorage` as `feature:<key>` (`"true"` / `"false"`). Change it in the flags panel or in DevTools, then reload: flags are read once at page load. A new tab starts from the defaults.
+- Where overrides are disabled (production by default), `sessionStorage` is never read: the app uses the defaults, and every flag named `mock*` is forced off. Name a flag `mock*` only if it must never reach users.
+- `env.ts` holds the one line that decides where overrides are enabled.
+
+### Server rendering
+
+- The server has no `sessionStorage`, so it renders every flag at its default. Server components never see an override.
+- A client component that renders an overridden flag differs from the server HTML, so React warns about a hydration mismatch. That warning is expected while a flag is overridden.
 
 ## Mock API mode
+
+Mock API mode covers wrapped functions only. Requests that bypass them (third-party SDKs, WebSockets) stay live.
 
 Every request function gets a mock at the bottom of its own file, with the same arguments and the same response type. The call site picks one through `mockable`:
 

@@ -1,5 +1,5 @@
 export {
-  defaultFeatureConfig,
+  featureDescriptions,
   type FeatureConfig,
   type FeatureConfigKey,
 } from './defaultFeatureConfig';

@@ -7,45 +7,37 @@ import {
 
 const storageKey = (key: FeatureConfigKey) => `feature:${key}`;
 
-// sessionStorage is missing outside the browser, and reading it throws when
-// the browser blocks storage; both count as "nothing stored".
-function readItem(key: FeatureConfigKey): string | null {
+// sessionStorage is missing outside the browser (SSR), and touching it throws
+// when the browser blocks storage; both give the fallback.
+function withStorage<T>(use: (storage: Storage) => T, fallback: T): T {
   try {
-    if (typeof sessionStorage === 'undefined') return null;
-    return sessionStorage.getItem(storageKey(key));
+    if (typeof sessionStorage === 'undefined') return fallback;
+    return use(sessionStorage);
   } catch {
-    return null;
+    return fallback;
   }
 }
 
-function writeItem(key: FeatureConfigKey, value: string) {
-  try {
-    if (typeof sessionStorage === 'undefined') return;
-    sessionStorage.setItem(storageKey(key), value);
-  } catch {
-    // Storage is unavailable or full; the flag keeps its current value.
-  }
+function loadFlag(key: FeatureConfigKey): boolean {
+  const fallback = defaultFeatureConfig[key];
+  return withStorage(storage => {
+    const stored = storage.getItem(storageKey(key));
+    if (stored !== null) return stored === 'true';
+    storage.setItem(storageKey(key), String(fallback));
+    return fallback;
+  }, fallback);
 }
 
-/** Seeds missing flags with their defaults, then reads every flag. */
-export function getFeatureConfigFromSessionStorage(): FeatureConfig {
-  writeFeatureConfigToSessionStorage(defaultFeatureConfig);
+/** Reads every flag, storing the default of each flag not stored yet. */
+export function loadFeatureConfig(): FeatureConfig {
   return Object.fromEntries(
-    featureKeys.map(key => [key, isFeatureActive(key)]),
+    featureKeys.map(key => [key, loadFlag(key)]),
   ) as FeatureConfig;
 }
 
-/** Stores the given value of every flag that has none stored yet. */
-export function writeFeatureConfigToSessionStorage(config: FeatureConfig) {
-  for (const key of featureKeys) {
-    if (readItem(key) === null) setFeatureState(key, config[key]);
-  }
-}
-
-export function isFeatureActive(key: FeatureConfigKey): boolean {
-  return readItem(key) === 'true';
-}
-
 export function setFeatureState(key: FeatureConfigKey, active: boolean) {
-  writeItem(key, String(active));
+  withStorage(
+    storage => storage.setItem(storageKey(key), String(active)),
+    undefined,
+  );
 }

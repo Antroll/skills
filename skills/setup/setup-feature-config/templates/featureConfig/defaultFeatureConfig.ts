@@ -1,21 +1,12 @@
-import { isDev } from './env';
+import { overridesEnabled } from './env';
 
-/**
- * Every feature flag and its default. To add a flag, add it here: the
- * sessionStorage overrides and the dev panel pick it up from this object.
- * Flags named `mock*` are dev-only: production builds force them off.
- */
+// Every feature flag and its default. To add a flag, add it here and in
+// featureDescriptions. Flags named `mock*` are forced off
+// wherever overrides are disabled.
 export const defaultFeatureConfig = {
-  /** If enabled, the feature flags panel is shown. */
-  isDevUiEnabled: isDev,
-  /**
-   * If enabled, every request wrapped in `mockable` answers with its mock,
-   * so the app runs without the API.
-   */
+  isDevUiEnabled: overridesEnabled,
   mockApi: false,
-  /** With Mock API mode: every mock takes 3 s to answer. */
   mockSlow: false,
-  /** With Mock API mode: every mock fails. */
   mockFailing: false,
 };
 
@@ -26,3 +17,12 @@ export type FeatureConfig = Record<FeatureConfigKey, boolean>;
 export const featureKeys = Object.keys(
   defaultFeatureConfig,
 ) as FeatureConfigKey[];
+
+export const featureDescriptions: Record<FeatureConfigKey, string> = {
+  isDevUiEnabled:
+    'Shows the feature flags panel. Works only where overrides are enabled.',
+  mockApi:
+    'Every request wrapped in mockable answers with its mock, so the app runs without the API.',
+  mockSlow: 'With Mock API mode: every mock takes 3 seconds to answer.',
+  mockFailing: 'With Mock API mode: every mock fails.',
+};
