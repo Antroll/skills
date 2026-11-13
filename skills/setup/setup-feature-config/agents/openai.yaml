@@ -1,0 +1,5 @@
+interface:
+  display_name: "Setup Feature Config"
+  short_description: "Feature flags and offline Mock API mode"
+policy:
+  allow_implicit_invocation: false
